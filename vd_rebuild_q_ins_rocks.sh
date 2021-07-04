@@ -2,7 +2,7 @@
 
 if [[ -z "$1" ]]
 then
-        printf "Usage: $0 INPUT_FILE(list of queue instances)\n"
+        printf "Usage: $0 FILE_QUEUE_INS\n"
         exit 2
 fi
 
@@ -18,10 +18,8 @@ while read -r q_ins; do
 	host="$(echo $q_ins | awk -F"@" '{print $2}')"
 
 	rocks remove host partition "$host"
-	ssh "$host" 'sh /root/nukeit.sh' < /dev/null
-
 	rocks set host boot "$host" action=install
-	ssh "$host" 'shutdown -r now' < /dev/null
+	ssh "$host" '/opt/dice_host_utils/reboot_q_ins_sge.sh' < /dev/null
 done <<< "$(echo "$todo_list")"
 
 exit 0

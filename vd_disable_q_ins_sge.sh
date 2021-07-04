@@ -2,9 +2,12 @@
 
 if [[ -z "$1" ]]
 then
-	printf "Usage: $0 INPUT_FILE(list of queue instances)\n"
+	printf "Usage: $0 FILE_QUEUE_INS [slacker|mismatch]\n"
 	exit 2
 fi
+
+target="${2:-slacker}"
+d_list="$(qstat -f -qs d)" # list of disabled nodes
 
 todo_list="$(cat $1)"
 
@@ -14,20 +17,24 @@ then
         exit 2
 fi
 
-d_list="$(qstat -f -qs d)" # list of disabled nodes
-
 while read -r q_ins; do
 	# we do NOT touch the nodes that have been disabled. This ensures
 	# only the nodes disabled by this execution are included.
 	if ! grep -q "$q_ins" <<< "$d_list"
 	then
-		cpu_slots="$(qstat -f -q "$q_ins" | grep "$q_ins" | awk '{print $3}')"
-		cpu_used="$(echo "$cpu_slots" | awk -F"/" '{print $2}')"
-		
-		if [[ "$cpu_used" -eq 0 ]]
+		if [[ "$target" == "mismatch" ]]
 		then
 			printf "$q_ins\n"
 			qmod -d "$q_ins" > /dev/null
+		else
+			cpu_slots="$(qstat -f -q "$q_ins" | grep "$q_ins" | awk '{print $3}')"
+			cpu_used="$(echo "$cpu_slots" | awk -F"/" '{print $2}')"
+		
+			if [[ "$cpu_used" -eq 0 ]]
+			then
+				printf "$q_ins\n"
+				qmod -d "$q_ins" > /dev/null
+			fi
 		fi
 	fi
 done <<< "$(echo "$todo_list")"
