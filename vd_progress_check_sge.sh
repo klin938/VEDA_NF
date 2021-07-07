@@ -38,8 +38,8 @@ do
 		fi
 		
 		printf "$state [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n"
-		echo "$state" >> "$nf_probe_file"
-		sleep 5s
+		echo "$state" > "$nf_probe_file"
+		sleep 15s
 	else
 		printf "DONE [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n"
 		exit 0
