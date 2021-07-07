@@ -25,7 +25,6 @@ while read -r q_ins; do
 	then
 		if [[ "$target" == "mismatch" ]]
 		then
-			#printf "$q_ins\n"
 			disabled="${disabled}${q_ins}\n"
 			qmod -d "$q_ins" > /dev/null
 		else
@@ -34,7 +33,6 @@ while read -r q_ins; do
 		
 			if [[ "$cpu_used" -eq 0 ]]
 			then
-				#printf "$q_ins\n"
 				disabled="${disabled}${q_ins}\n"
 				qmod -d "$q_ins" > /dev/null
 			fi
