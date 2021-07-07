@@ -1,26 +1,47 @@
 #!/bin/bash
 
+# Usage: $0 [QUEUE] [SAFE_RATE] [DONE_RATE] [PROBE_DIR]
+#
+# SAFE_RATE: when the progress is below SAFE_RATE, we will disable "slacker" only.
+#            when the progress is above SAFE_RATE, we will disable the rest of the ver mismatch nodes
+#
+# DONE_RATE: indicates completion. Normally it's 1 (100%)
+#
+# PROBE_DIR: where to generate signal files which are used by nextflow
+
+exec > /tmp/vd_progress_check_sge.log
+exec 2>&1
+
 q="${1:-short.q}"
-completed_rate="${2:-1}"
-probe_dir="${3:-/tmp}"
+safe="${2:-0.50}"
+done="${3:-1}"
+nf_probe_dir="${4:-/tmp}"
+nf_probe_file="$nf_probe_dir"/nf_probe_progress_state
 
 count_all="$(qstat -f -q $q | grep $q | wc -l)"
 
 while :
 do
 	current_time="$(date "+%Y.%m.%d-%H.%M.%S")"
-	probe_file="$probe_dir"/vd_prog."$current_time"
 
 	count_mismatch="$(vd_find_mismatch_sge.sh $q | wc -l)"
 	count_completed="$(( count_all - count_mismatch ))"
-	current_rate="$(echo "scale=2; $count_completed/$count_all" | bc)"
-
-	if (( $(echo "$current_rate < $completed_rate" | bc -l) )); then
-		printf "BAD [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current_rate ]\n" > "$probe_file"
-		cat "$probe_file"
+	current="$(echo "scale=2; $count_completed/$count_all" | bc)"
+	
+	if (( $(echo "$current < $done" | bc -l) ))
+	then
+		if (( $(echo "$current > $safe" | bc -l) ))
+		then
+			state="SAFE"
+		else
+			state="BAD"
+		fi
+		
+		printf "$state [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n"
+		echo "$state" >> "$nf_probe_file"
 		sleep 5s
 	else
-		printf "OK [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current_rate ]\n"
+		printf "DONE [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n"
 		exit 0
 	fi
 done

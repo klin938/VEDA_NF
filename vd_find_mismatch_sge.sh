@@ -13,22 +13,29 @@ fi
 au_list="$(qstat -f -qs au)" # list of nodes in au states
 icu_grp="$(qconf -shgrp @icu)"
 
+found=""
 while read -r q_ins; do
 
         host="$(echo $q_ins | awk -F"@" '{print $2}')"
 	# We ignore nodes in ICU or in au states
 	if grep -q "$host" <<< "$icu_grp" || grep -q "$q_ins" <<< "$au_list"
 	then
-		:
+		 printf "SKIPPED: $host is found in ICU (@icu) OR in SGE (au) state.\n"
 	else
         	ver_check="$(ssh "$host" '/opt/dice_host_utils/check_ver_mismatch.sh' < /dev/null)"
 
         	if [[ "$ver_check" == *"BAD"* ]]
         	then
-			printf "$q_ins\n"
+			found="${found}${q_ins}\n"
 		fi
         fi
 done <<< "$(echo "$todo_list")"
+
+if [[ ! -z "$found" ]]
+then
+	printf "$found" > nf_probe_mismatch
+	cat nf_probe_mismatch
+fi
 
 exit 0
 
