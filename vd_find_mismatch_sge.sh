@@ -23,8 +23,8 @@ while read -r q_ins; do
 		 printf "SKIPPED: $host is found in ICU (@icu) OR in SGE (au) state.\n"
 	else
         	ver_check="$(ssh "$host" '/opt/dice_host_utils/check_ver_mismatch.sh' < /dev/null)"
-
-        	if [[ "$ver_check" == *"BAD"* ]]
+		
+        	if [[ "$ver_check" != *"OK"* ]] # use OK it can catch nodes with broken SSH too
         	then
 			found="${found}${q_ins}\n"
 		fi
