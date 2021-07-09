@@ -2,14 +2,17 @@
 
 if [[ -z "$1" ]]
 then
-	printf "Usage: $0 FILE_QUEUE_INS [slacker|mismatch]\n"
+	printf "Usage: $0 FILE_QUEUE_INS [slacker|mismatch] [NF_PROBE_PATH]\n"
 	exit 2
+else
+	todo_list="$(cat $1)"
 fi
 
 target="${2:-slacker}"
-d_list="$(qstat -f -qs d)" # list of disabled nodes
+nf_probe_dir="${3:-/tmp}"
+nf_probe_file="$nf_probe_dir"/nf_probe_disabled
 
-todo_list="$(cat $1)"
+d_list="$(qstat -f -qs d)" # list of disabled nodes
 
 if [[ -z "$todo_list" ]]
 then
@@ -44,8 +47,8 @@ done <<< "$(echo "$todo_list")"
 
 if [[ ! -z "$disabled" ]]
 then
-	printf "$disabled" > nf_probe_disabled
-	cat nf_probe_disabled
+	printf "$disabled" > "$nf_probe_file"
+	cat "$nf_probe_file"
 fi
 
 exit 0
