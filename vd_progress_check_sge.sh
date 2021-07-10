@@ -9,8 +9,8 @@
 #
 # PROBE_DIR: where to generate signal files which are used by nextflow
 
-exec > /tmp/vd_progress_check_sge.log
-exec 2>&1
+
+LOG="/tmp/vd_progress_check_sge.log"
 
 q="${1:-short.q}"
 safe="${2:-0.50}"
@@ -19,6 +19,10 @@ nf_probe_dir="${4:-/tmp}"
 nf_probe_file="$nf_probe_dir"/nf_probe_progress_state
 
 count_all="$(qstat -f -q $q | grep $q | wc -l)"
+
+printf "#################### Started: $(date "+%Y.%m.%d-%H.%M.%S") ####################\n" >>  "$LOG"
+printf "## sgeQueue   : $q\n## safe       : %% of completed nodes > $safe\n## done       : %% of completed nodes = $done\n" >> "$LOG"
+printf "######################################################################\n" >> "$LOG"
 
 while :
 do
@@ -39,11 +43,11 @@ do
 			sleep_time="1m"
 		fi
 		
-		printf "$state [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n"
+		printf "$state [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n" >> "$LOG"
 		echo "$state" > "$nf_probe_file"
 		sleep "$sleep_time"
 	else
-		printf "DONE [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n"
+		printf "DONE [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n\n\n" >> "$LOG"
 		exit 0
 	fi
 done
