@@ -1,6 +1,8 @@
 #!/bin/bash
 
 queue="${1:-short.q}"
+nf_probe_dir="${2:-/tmp}"
+nf_probe_file="$nf_probe_dir"/nf_probe_mismatch
 
 todo_list="$(qstat -f -q "$queue" | grep "$queue" | awk '{print $1}')"
 
@@ -33,8 +35,8 @@ done <<< "$(echo "$todo_list")"
 
 if [[ ! -z "$found" ]]
 then
-	printf "$found" > nf_probe_mismatch
-	cat nf_probe_mismatch
+	printf "$found" > "$nf_probe_file"
+	cat "$nf_probe_file"
 fi
 
 exit 0
