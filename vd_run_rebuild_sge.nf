@@ -7,37 +7,26 @@ log.info """\
  safe       : % of completed nodes > ${params.safe}
  done       : % of completed nodes = ${params.done}
  survival   : % of disabled nodes <= ${params.survival}
+ Log        : ${params.progressLog}
  """
 
 Channel
 	.watchPath( "${workflow.workDir}/nf_probe_progress_state", 'modify' )
-	.into{ ch_progress; ch_state }
+	.set { ch_progress }
+
+Channel
+	.watchPath( "${workflow.workDir}/nf_probe_mismatch", 'modify' )
+	.set { ch_mismatch }
+
+Channel
+	.watchPath( "${workflow.workDir}/nf_probe_disabled", 'modify' )
+	.set { ch_disabled }
+
 
 process progressCheck {
 
         """
         ${workflow.projectDir}/vd_progress_check_sge.sh '${params.sgeQueue}' '${params.safe}' '${params.done}' '${workflow.workDir}'
-        """
-}
-
-process stateController {
-
-        input:
-        file 'state.txt' from ch_state
-
-        output:
-        file 'state_safe.txt' optional true into ch_safe_state
-        file 'state_bad.txt' optional true into ch_bad_state
-
-        """
-        state=\$(cat state.txt)
-        if [[ \$state == *"BAD"* ]]; then
-                touch state_bad.txt
-        elif [[ \$state == *"SAFE"* ]]; then
-                touch state_safe.txt
-        else
-                :
-        fi
         """
 }
 
@@ -59,40 +48,29 @@ process findMismatch {
 	input:
 	file s from ch_survival
 
-	output:
-	file 'nf_probe_mismatch' optional true into ch01_mismatch
-	file 'nf_probe_mismatch' optional true into ch02_mismatch
-	
 	"""	
-	${workflow.projectDir}/vd_find_mismatch_sge.sh '${params.sgeQueue}'
+	${workflow.projectDir}/vd_find_mismatch_sge.sh '${params.sgeQueue}' '${workflow.workDir}'
 	"""
 }
 
-process disableSlacker {
+process disable {
 
 	input:
-	file m from ch01_mismatch
-	file b from ch_bad_state
+	file m from ch_mismatch
 
 	"""
-	${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} slacker '${workflow.workDir}'
-	"""	
-}
-
-process disableMismatch {
-	
-	input:
-	file m from ch02_mismatch
-	file s from ch_safe_state
-
-	"""
-	${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} mismatch '${workflow.workDir}'
+	state=\$(cat ${workflow.workDir}/nf_probe_progress_state)
+	if [[ \$state == *"BAD"* ]]; then
+		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} slacker '${workflow.workDir}'
+		printf "[SLACKER DISABLED]:\n" > '${workflow.workDir}/disable_method'
+	elif [[ \$state == *"SAFE"* ]]; then
+		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} mismatch '${workflow.workDir}'
+		printf "[MISMATCH DISABLED]:\n" > '${workflow.workDir}/disable_method'
+	else
+		:
+	fi
 	"""
 }
-
-Channel
-   .watchPath( "${workflow.workDir}/nf_probe_disabled", 'modify' )
-   .set { ch_disabled }
 
 process rebuild {
 
@@ -100,6 +78,8 @@ process rebuild {
 	file d from ch_disabled
 	
 	"""
+	cat ${workflow.workDir}/disable_method >> '${params.progressLog}'
+	cat ${d} >> '${params.progressLog}'
 	${workflow.projectDir}/vd_rebuild_q_ins_rocks.sh ${d}
 	"""
 }
