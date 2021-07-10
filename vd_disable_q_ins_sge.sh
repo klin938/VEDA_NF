@@ -1,8 +1,11 @@
 #!/bin/bash
 
+# slacker: bad nodes without any active SGE running jobs
+# resister: remaining bad nodes when rebuild progress meets SAFE level
+
 if [[ -z "$1" ]]
 then
-	printf "Usage: $0 FILE_QUEUE_INS [slacker|mismatch] [NF_PROBE_PATH]\n"
+	printf "Usage: $0 FILE_QUEUE_INS [slacker|resister] [NF_CHANNEL_FILE_DIR]\n"
 	exit 2
 else
 	todo_list="$(cat $1)"
@@ -25,8 +28,8 @@ while read -r q_ins; do
 	# we do NOT touch the nodes that have been disabled. This ensures
 	# only the nodes disabled by this execution are included.
 	if ! grep -q "$q_ins" <<< "$d_list"
-	then
-		if [[ "$target" == "mismatch" ]]
+	then	# disable all remaining bad nodes
+		if [[ "$target" == "resister" ]]
 		then
 			disabled="${disabled}${q_ins}\n"
 			qmod -d "$q_ins" > /dev/null

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Usage: $0 [QUEUE] [NF_CHANNEL_FILE_DIR]
+
 queue="${1:-short.q}"
 nf_probe_dir="${2:-/tmp}"
 nf_probe_file="$nf_probe_dir"/nf_probe_mismatch

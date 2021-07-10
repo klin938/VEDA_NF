@@ -62,10 +62,10 @@ process disable {
 	state=\$(cat ${workflow.workDir}/nf_probe_progress_state)
 	if [[ \$state == *"BAD"* ]]; then
 		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} slacker '${workflow.workDir}'
-		printf "[SLACKER DISABLED]:\n" > '${workflow.workDir}/disable_method'
+		printf "[SLACKER DISABLED]:\n" > '${workflow.workDir}/disable_mode'
 	elif [[ \$state == *"SAFE"* ]]; then
-		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} mismatch '${workflow.workDir}'
-		printf "[MISMATCH DISABLED]:\n" > '${workflow.workDir}/disable_method'
+		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} resister '${workflow.workDir}'
+		printf "[RESISTER DISABLED]:\n" > '${workflow.workDir}/disable_mode'
 	else
 		:
 	fi
@@ -78,7 +78,7 @@ process rebuild {
 	file d from ch_disabled
 	
 	"""
-	cat ${workflow.workDir}/disable_method >> '${params.progressLog}'
+	cat ${workflow.workDir}/disable_mode >> '${params.progressLog}'
 	cat ${d} >> '${params.progressLog}'
 	${workflow.projectDir}/vd_rebuild_q_ins_rocks.sh ${d}
 	"""

@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Usage: $0 [QUEUE] [SAFE_RATE] [DONE_RATE] [PROBE_DIR]
+# Usage: $0 [QUEUE] [SAFE_RATE] [DONE_RATE] [NF_CHANNEL_FILE_DIR]
 #
-# SAFE_RATE: when the progress is below SAFE_RATE, we will disable "slacker" only.
-#            when the progress is above SAFE_RATE, we will disable the rest of the ver mismatch nodes
+# SAFE_RATE: when the progress is BELOW SAFE_RATE, we will disable "slacker" only.
+#            when the progress is ABOVE SAFE_RATE, we will disable "resister" nodes
 #
 # DONE_RATE: indicates completion. Normally it's 1 (100%)
 #
-# PROBE_DIR: where to generate signal files which are used by nextflow
+# NF_CHANNEL_FILE_DIR: where to generate signal file which are used by nextflow channel
 
 
 LOG="/tmp/vd_progress_check_sge.log"
