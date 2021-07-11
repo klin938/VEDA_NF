@@ -19,9 +19,15 @@ nf_probe_dir="${4:-/tmp}"
 nf_probe_file="$nf_probe_dir"/nf_probe_progress_state
 
 count_all="$(qstat -f -q $q | grep $q | wc -l)"
+SSH_TIMEOUT=5
+BAD_INTVL="$(($SSH_TIMEOUT * $count_all))s"
+SAFE_INTVL="120m"
 
 printf "#################### Started: $(date "+%Y.%m.%d-%H.%M.%S") ####################\n" >>  "$LOG"
-printf "## sgeQueue   : $q\n## safe       : %% of completed nodes > $safe\n## done       : %% of completed nodes = $done\n" >> "$LOG"
+printf "## sgeQueue   : $q\n" >>  "$LOG"
+printf "## bad        :        %% of completed nodes < $safe (interval $BAD_INTVL)\n" >>  "$LOG"
+printf "## safe       : $safe < %% of completed nodes < $done    (interval $SAFE_INTVL)\n" >> "$LOG"
+printf "## done       :        %% of completed nodes = $done\n" >> "$LOG"
 printf "######################################################################\n" >> "$LOG"
 
 while :
@@ -37,10 +43,10 @@ do
 		if (( $(echo "$current > $safe" | bc -l) ))
 		then
 			state="SAFE"
-			sleep_time="120m"
+			sleep_time="$SAFE_INTVL"
 		else
 			state="BAD"
-			sleep_time="1m"
+			sleep_time="$BAD_INTVL"
 		fi
 		
 		printf "$state [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n" >> "$LOG"
