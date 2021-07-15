@@ -3,6 +3,15 @@
 # slacker: bad nodes without any active SGE running jobs
 # resister: remaining bad nodes when rebuild progress meets SAFE level
 
+# RETURN:  number of mismatch nodes or 0
+# PRODUCE: nf_probe_disabled contains just the list of mismatch nodes used by Nextflow
+#          vd_disable_q_ins_sge.log contains all output inc nf_probe_disabled content
+
+exec >> /tmp/vd_disable_q_ins_sge.log
+exec 2>&1
+
+printf "#################### Started: $(date "+%Y.%m.%d-%H.%M.%S") ####################\n"
+
 if [[ -z "$1" ]]
 then
 	printf "Usage: $0 FILE_QUEUE_INS [slacker|resister] [NF_CHANNEL_FILE_DIR]\n"
@@ -51,7 +60,10 @@ done <<< "$(echo "$todo_list")"
 if [[ ! -z "$disabled" ]]
 then
 	printf "$disabled" > "$nf_probe_file"
+	count="$(cat "$nf_probe_file" | wc -l)"
+	printf "Number of [$target] disabled: $count\n"
 	cat "$nf_probe_file"
+	exit $count
 fi
 
 exit 0

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+exec >> /tmp/vd_rebuild_q_ins_rocks.log
+exec 2>&1
+
+printf "#################### Started: $(date "+%Y.%m.%d-%H.%M.%S") ####################\n"
+
 if [[ -z "$1" ]]
 then
         printf "Usage: $0 FILE_QUEUE_INS\n"

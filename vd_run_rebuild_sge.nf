@@ -44,6 +44,7 @@ process checkSurvival {
 }
 
 process findMismatch {
+	errorStrategy 'ignore'
 	
 	input:
 	file s from ch_survival
@@ -54,6 +55,7 @@ process findMismatch {
 }
 
 process disable {
+	errorStrategy 'ignore'
 
 	input:
 	file m from ch_mismatch
@@ -61,11 +63,11 @@ process disable {
 	"""
 	state=\$(cat ${workflow.workDir}/nf_probe_progress_state)
 	if [[ \$state == *"BAD"* ]]; then
-		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} slacker '${workflow.workDir}'
 		printf "[SLACKER DISABLED]:\n" > '${workflow.workDir}/disable_mode'
+		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} slacker '${workflow.workDir}'
 	elif [[ \$state == *"SAFE"* ]]; then
-		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} resister '${workflow.workDir}'
 		printf "[RESISTER DISABLED]:\n" > '${workflow.workDir}/disable_mode'
+		${workflow.projectDir}/vd_disable_q_ins_sge.sh ${m} resister '${workflow.workDir}'
 	else
 		:
 	fi

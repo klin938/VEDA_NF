@@ -9,7 +9,8 @@
 #
 # NF_CHANNEL_FILE_DIR: where to generate signal file which are used by nextflow channel
 
-
+# IMPORTANT: We do not use "exec >> /tmp/log" here like other scripts
+# because nextflow needs to write to the same file in the processes.
 LOG="/tmp/vd_progress_check_sge.log"
 
 q="${1:-short.q}"
@@ -23,9 +24,9 @@ SSH_TIMEOUT=5
 BAD_INTVL="$(($SSH_TIMEOUT * $count_all))s"
 SAFE_INTVL="120m"
 
-printf "#################### Started: $(date "+%Y.%m.%d-%H.%M.%S") ####################\n" >>  "$LOG"
+printf "#################### Started: $(date "+%Y.%m.%d-%H.%M.%S") ####################\n" >> "$LOG"
 printf "## sgeQueue   : $q\n" >>  "$LOG"
-printf "## bad        :        %% of completed nodes < $safe (interval $BAD_INTVL)\n" >>  "$LOG"
+printf "## bad        :        %% of completed nodes < $safe (interval $BAD_INTVL)\n" >> "$LOG"
 printf "## safe       : $safe < %% of completed nodes < $done    (interval $SAFE_INTVL)\n" >> "$LOG"
 printf "## done       :        %% of completed nodes = $done\n" >> "$LOG"
 printf "######################################################################\n" >> "$LOG"
@@ -33,8 +34,8 @@ printf "######################################################################\n
 while :
 do
 	current_time="$(date "+%Y.%m.%d-%H.%M.%S")"
-
-	count_mismatch="$(vd_find_mismatch_sge.sh $q | wc -l)"
+	vd_find_mismatch_sge.sh $q
+	count_mismatch=$? # vd_find_mismatch_sge.sh rc number of nodes or 0
 	count_completed="$(( count_all - count_mismatch ))"
 	current="$(echo "scale=2; $count_completed/$count_all" | bc)"
 	
@@ -49,11 +50,11 @@ do
 			sleep_time="$BAD_INTVL"
 		fi
 		
-		printf "$state [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n" >> "$LOG"
+		printf "Progress: $state [ $current_time | All: $count_all | Completed: $count_completed | Ratio: $current ]\n" >> "$LOG"
 		echo "$state" > "$nf_probe_file"
 		sleep "$sleep_time"
 	else
-		printf "DONE [ $current_time | All: $count_all | Completed: $count_completed | Progress: $current ]\n\n\n" >> "$LOG"
+		printf "Progress: DONE [ $current_time | All: $count_all | Completed: $count_completed | Ratio: $current ]\n\n\n" >> "$LOG"
 		exit 0
 	fi
 done
