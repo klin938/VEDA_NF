@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# DV-4
+
 exec >> /tmp/vd_rebuild_q_ins_rocks.log
 exec 2>&1
 
@@ -24,7 +26,8 @@ while read -r q_ins; do
 
 	rocks remove host partition "$host"
 	rocks set host boot "$host" action=install
-	ssh "$host" '/opt/dice_host_utils/reboot_q_ins_sge.sh' < /dev/null
+	# also disable R2D2 in case it is a delayed bot reboot
+	ssh "$host" 'touch /root/veda && /opt/dice_host_utils/reboot_q_ins_sge.sh' < /dev/null
 done <<< "$(echo "$todo_list")"
 
 exit 0

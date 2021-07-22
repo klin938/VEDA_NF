@@ -1,8 +1,12 @@
 #!/usr/bin/env nextflow
 
+/* 
+   DV-4
+ */
+
 log.info """\
- V E D A - N F   S G E   R E B U I L D
- =========================================
+ V E D A - N F   S G E   R E B U I L D E R
+ ==========================================
  sgeQueue   : ${params.sgeQueue}
  safe       : % of completed nodes > ${params.safe}
  done       : % of completed nodes = ${params.done}

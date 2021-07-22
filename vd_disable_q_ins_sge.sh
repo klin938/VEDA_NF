@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# DV-4
+
 # slacker: bad nodes without any active SGE running jobs
 # resister: remaining bad nodes when rebuild progress meets SAFE level
 

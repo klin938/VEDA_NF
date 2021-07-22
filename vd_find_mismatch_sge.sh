@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# DV-4
+
 # Usage: $0 [QUEUE] [NF_CHANNEL_FILE_DIR]
 
 # RETURN:  number of mismatch nodes or 0
@@ -39,9 +41,13 @@ while read -r q_ins; do
 		printf "UNKNOWN: $host is in SGE (au) state, counted as mismatch.\n"
 		found="${found}${q_ins}\n"
 	else
-        	ver_check="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$host" '/opt/dice_host_utils/check_ver_mismatch.sh' < /dev/null)"
+		# Add magic var to dx_version to enable verbose and prints OK 
+		# or BAD at the last line. Timeout value here is also used for
+		# calculating the sleep invernal in the main progress loop.
+        	ver_check="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$host" '/opt/dice_host_utils/dx_version.sh m | tail -n 1' < /dev/null)"
 		
-        	if [[ "$ver_check" != *"OK"* ]] # use OK it can catch nodes with broken SSH too
+		# use "NOT OK" so we can catch nodes with broken SSH too
+        	if [[ "$ver_check" != "OK" ]]
         	then
 			found="${found}${q_ins}\n"
 		fi

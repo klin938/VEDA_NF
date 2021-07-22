@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# DV-4
+
 # Usage: $0 [QUEUE] [SAFE_RATE] [DONE_RATE] [NF_CHANNEL_FILE_DIR]
 #
 # SAFE_RATE: when the progress is BELOW SAFE_RATE, we will disable "slacker" only.
@@ -19,7 +21,12 @@ done="${3:-1}"
 nf_probe_dir="${4:-/tmp}"
 nf_probe_file="$nf_probe_dir"/nf_probe_progress_state
 
-count_all="$(qstat -f -q $q | grep $q | wc -l)"
+# number of mismatch nodes found the first time
+# is also the total number for the entire process.
+vd_find_mismatch_sge.sh $q
+count_mismatch=$?
+count_all=$count_mismatch
+
 SSH_TIMEOUT=5
 BAD_INTVL="$(($SSH_TIMEOUT * $count_all))s"
 SAFE_INTVL="120m"
@@ -34,8 +41,7 @@ printf "######################################################################\n
 while :
 do
 	current_time="$(date "+%Y.%m.%d-%H.%M.%S")"
-	vd_find_mismatch_sge.sh $q
-	count_mismatch=$? # vd_find_mismatch_sge.sh rc number of nodes or 0
+	
 	count_completed="$(( count_all - count_mismatch ))"
 	current="$(echo "scale=2; $count_completed/$count_all" | bc)"
 	
@@ -57,6 +63,9 @@ do
 		printf "Progress: DONE [ $current_time | All: $count_all | Completed: $count_completed | Ratio: $current ]\n\n\n" >> "$LOG"
 		exit 0
 	fi
+
+	vd_find_mismatch_sge.sh $q
+	count_mismatch=$? # vd_find_mismatch_sge.sh rc number of nodes or 0
 done
 
 
