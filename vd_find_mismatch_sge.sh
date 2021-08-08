@@ -44,7 +44,7 @@ while read -r q_ins; do
 		# Add magic var to dx_version to enable verbose and prints OK 
 		# or BAD at the last line. Timeout value here is also used for
 		# calculating the sleep invernal in the main progress loop.
-        	ver_check="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$host" '/opt/dice_host_utils/dx_version.sh m | tail -n 1' < /dev/null)"
+        	ver_check="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$host" '/opt/dice_host_utils/dx/dx_version.sh m | tail -n 1' < /dev/null)"
 		
 		# use "NOT OK" so we can catch nodes with broken SSH too
         	if [[ "$ver_check" != "OK" ]]

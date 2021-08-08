@@ -26,8 +26,8 @@ while read -r q_ins; do
 
 	rocks remove host partition "$host"
 	rocks set host boot "$host" action=install
-	# also disable R2D2 in case it is a delayed bot reboot
-	ssh "$host" 'touch /root/veda && /opt/dice_host_utils/reboot_q_ins_sge.sh' < /dev/null
+	# issue reboot cmd with nukeit to R2D2
+	ssh "$host" 'echo "nukeit" > /root/reboot && touch /root/veda' < /dev/null
 done <<< "$(echo "$todo_list")"
 
 exit 0
