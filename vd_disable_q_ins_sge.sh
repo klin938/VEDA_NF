@@ -35,7 +35,9 @@ then
 fi
 
 disabled=""
-while read -r q_ins; do
+# PADMIN-35
+while IFS= read -r q_ins
+do
 	# we do NOT touch the nodes that have been disabled. This ensures
 	# only the nodes disabled by this execution are included.
 	if ! grep -q "$q_ins" <<< "$d_list"
@@ -57,7 +59,7 @@ while read -r q_ins; do
 	else
 		printf "SKIPPED: $q_ins has been disabled outside this execution.\n"
 	fi
-done <<< "$(echo "$todo_list")"
+done < <(printf '%s\n' "$todo_list") # PADMIN-35
 
 if [[ ! -z "$disabled" ]]
 then

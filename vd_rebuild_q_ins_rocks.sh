@@ -21,13 +21,15 @@ then
         exit 2
 fi
 
-while read -r q_ins; do
+# PADMIN-35
+while IFS= read -r q_ins
+do
 	host="$(echo $q_ins | awk -F"@" '{print $2}')"
 
 	rocks remove host partition "$host"
 	rocks set host boot "$host" action=install
 	# issue reboot cmd with nukeit to R2D2
 	ssh "$host" 'echo "nukeit" > /root/reboot && touch /root/veda' < /dev/null
-done <<< "$(echo "$todo_list")"
+done < <(printf '%s\n' "$todo_list") # PADMIN-35
 
 exit 0

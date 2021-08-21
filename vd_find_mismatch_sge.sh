@@ -29,8 +29,10 @@ au_list="$(qstat -f -qs au)" # list of nodes in au states
 icu_grp="$(qconf -shgrp @icu)"
 
 found=""
-while read -r q_ins; do
-
+# PADMIN-35 a prefered way of reading line by line from
+# qstat command output which is stored in a variable.
+while IFS= read -r q_ins
+do
         host="$(echo $q_ins | awk -F"@" '{print $2}')"
 	# We ignore nodes in ICU
 	if grep -q "$host" <<< "$icu_grp"
@@ -52,7 +54,7 @@ while read -r q_ins; do
 			found="${found}${q_ins}\n"
 		fi
         fi
-done <<< "$(echo "$todo_list")"
+done < <(printf '%s\n' "$todo_list") # PADMIN-35 herestring (<<<) is NOT prefered as it requires to use /tmp
 
 if [[ ! -z "$found" ]]
 then
